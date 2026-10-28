@@ -1,0 +1,121 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Service {
+  id            String                 @id @default(cuid())
+  name          String
+  slug          String                 @unique
+  category      String
+  description   String
+  duration      Int
+  price         Decimal                @db.Decimal(10, 2)
+  createdAt     DateTime               @default(now())
+  updatedAt     DateTime               @updatedAt
+  professionals ProfessionalService[]
+  appointments  Appointment[]
+  results       ResultCase[]
+}
+
+model Professional {
+  id           String                 @id @default(cuid())
+  name         String
+  photoUrl     String?
+  role         String?
+  bio          String?
+  credentials  String[]
+  specialties  String[]
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  services     ProfessionalService[]
+  workingHours WorkingHour[]
+  appointments Appointment[]
+}
+
+model ProfessionalService {
+  id             String       @id @default(cuid())
+  professional   Professional @relation(fields: [professionalId], references: [id])
+  professionalId String
+  service        Service      @relation(fields: [serviceId], references: [id])
+  serviceId      String
+
+  @@unique([professionalId, serviceId])
+}
+
+model WorkingHour {
+  id             String       @id @default(cuid())
+  professional   Professional @relation(fields: [professionalId], references: [id])
+  professionalId String
+  weekday        Int
+  startMinute    Int
+  endMinute      Int
+
+  @@unique([professionalId, weekday])
+}
+
+model Client {
+  id           String        @id @default(cuid())
+  name         String
+  phone        String
+  email        String        @unique
+  createdAt    DateTime      @default(now())
+  appointments Appointment[]
+}
+
+model Appointment {
+  id             String       @id @default(cuid())
+  service        Service      @relation(fields: [serviceId], references: [id])
+  serviceId      String
+  professional   Professional @relation(fields: [professionalId], references: [id])
+  professionalId String
+  client         Client       @relation(fields: [clientId], references: [id])
+  clientId       String
+  startAt        DateTime
+  endAt          DateTime
+  status         String       @default("confirmed")
+  createdAt      DateTime     @default(now())
+
+  @@index([professionalId, startAt])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}
+
+model Post {
+  id          String    @id @default(cuid())
+  slug        String    @unique
+  title       String
+  excerpt     String
+  body        String
+  coverUrl    String
+  tags        String[]
+  publishedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([publishedAt])
+}
+
+model ResultCase {
+  id        String   @id @default(cuid())
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  serviceId String
+  beforeUrl String
+  afterUrl  String
+  caption   String
+  sessions  Int
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([serviceId, order])
+}

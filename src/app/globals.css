@@ -1,0 +1,71 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Alvo de foco visível em tudo que é interativo. Requisito de acessibilidade,
+     não estética: sem isso a navegação por teclado fica cega.
+     Usa `terracotta.balanced` (não o `terracotta` padrão nem o `.light`): o
+     anel de foco pode aparecer sobre fundo claro OU escuro (elemento
+     interativo dentro de uma seção `bg-charcoal`, por exemplo), e nenhum dos
+     dois tons de texto isoladamente passa 3:1 (não-texto) nos dois ao mesmo
+     tempo — ver a nota em tailwind.config.ts. */
+  :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid theme('colors.terracotta.balanced');
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+
+  /* Guarda global. Os componentes de motion também checam isso em JS, mas esta
+     regra cobre qualquer transição CSS que escape deles. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+
+  /* Tira o triângulo padrão do Safari em <summary>; o FaqAccordion desenha o
+     próprio indicador ("+"/rotação) em vez de duplicar com o nativo. */
+  summary::-webkit-details-marker {
+    display: none;
+  }
+}
+
+@layer utilities {
+  /* Textura de ruído: quebra o aspecto "gerado por IA" de gradientes lisos. */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.045'/%3E%3C/svg%3E");
+  }
+
+  /* Overlay obrigatório sob texto em cima de foto. Sem ele o contraste não
+     atinge 4.5:1 e o hero reprova em acessibilidade. */
+  .photo-scrim::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(31, 27, 24, 0.55), rgba(31, 27, 24, 0.2) 45%, rgba(31, 27, 24, 0.65));
+  }
+
+  /* Máscara para revelar texto de baixo para cima. */
+  .line-mask {
+    display: block;
+    overflow: hidden;
+  }
+}
